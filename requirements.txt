@@ -2,6 +2,7 @@ sentence-transformers>=2.7
 bertopic>=0.16
 umap-learn>=0.5.5
 hdbscan>=0.8.33
+scikit-learn>=1.4
 numpy
 pandas
 matplotlib

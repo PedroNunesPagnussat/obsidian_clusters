@@ -17,8 +17,11 @@ Single-file CLI in `main.py`.
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# default: ~/notes, BAAI/bge-small-en-v1.5, CPU
+# default: ~/notes, paraphrase-multilingual-MiniLM-L12-v2, CPU
 python main.py
+
+# English-only vault: bge is stronger
+python main.py --model BAAI/bge-small-en-v1.5
 
 # point at a vault
 python main.py --notes-dir ~/notes
@@ -48,8 +51,16 @@ Key invariants:
   UMAP is for plotting only. Don't conflate them.
 - **Cache invalidation**: keyed on `(path, mtime_ns, size)`. The pickle also
   stores `model_name`; swapping `--model` drops the cache and re-embeds all.
-- **Frontmatter is stripped** before embedding — the `---\n...\n---` block
-  pollutes c-TF-IDF keywords (`tags`, `aliases`, etc.) otherwise.
+- **Aggressive cleanup before embedding** (`CLEANERS` in main.py): strips
+  frontmatter, fenced code, Bases (`~~~`) blocks, inline dataview, HTML +
+  entities, embeds, callouts, table separators, task checkboxes; replaces
+  wikilinks with their alias/target. Without this, c-TF-IDF labels are
+  dominated by Dataview field names, HTML tags, and `nbsp`. Bump
+  `CLEAN_VERSION` when you change `CLEANERS` so the embedding cache invalidates.
+- **c-TF-IDF vectorizer** is tuned in `run_bertopic`: EN+PT stopwords,
+  bigrams, `min_df=2`, `max_df=0.5`, letters-only token pattern.
+  `KeyBERTInspired` + MMR re-rank keywords by semantic distance to
+  the cluster centroid for better labels.
 - **Whole-note embeddings**: one vector per file. No chunking.
 - **BERTopic with custom embeddings**: pass `embedding_model=None` plus
   `embeddings=...` to `fit_transform`.
@@ -64,8 +75,9 @@ Key invariants:
 - `charts/clusters.png` — same scatter, colored by topic, legend = top
   topics with top-3 keywords.
 - `charts/clusters.csv` — `path, topic_id, topic_keywords` (top-5).
-- `charts/topics.csv` — `topic_id, count, name, top_keywords` (top-10).
-- `embeddings/cache.pkl` — pickled `{model_name, vectors: {key: vec}}`.
+- `charts/topics.csv` — `topic_id, count, name, example_note, top_keywords`
+  (`example_note` is the centroid-nearest note's filename stem).
+- `embeddings/cache.pkl` — pickled `{model_name, clean_version, vectors}`.
 
 ## Gotchas
 
