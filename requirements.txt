@@ -1,7 +1,8 @@
 sentence-transformers>=2.7
-scikit-learn>=1.4
-matplotlib>=3.8
-numpy>=1.26
-pandas>=2.2
-pyarrow>=15
-tqdm>=4.66
+bertopic>=0.16
+umap-learn>=0.5.5
+hdbscan>=0.8.33
+numpy
+pandas
+matplotlib
+tqdm
